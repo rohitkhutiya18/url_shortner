@@ -11,6 +11,7 @@ export class UrlService {
     @InjectRepository(urlEntity) private urlRepo : Repository<urlEntity>
   ) {}
   create(createUrlDto: CreateUrlDto) {
+     const url = this.urlRepo.create(createUrlDto);
   }
 
   findAll() {
