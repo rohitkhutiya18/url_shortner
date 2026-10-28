@@ -7,7 +7,6 @@ import { appDataSource } from "./config/db.config.js";
 import express from "express";
 import { expressMiddleware } from "@as-integrations/express4";
 import { getOgUrl } from "./url/url.service.js";
-import httpProxy from "http-proxy";
 import { createContext } from "./auth/auth-service.js";
 import { connectRedis } from "./utils/redis.js";
 const app = express();
@@ -16,11 +15,6 @@ config();
 const server = new ApolloServer({
   typeDefs,
   resolvers,
-});
-
-const proxy = httpProxy.createProxyServer({
-  secure: true,
-  changeOrigin: true,
 });
 
 try {
