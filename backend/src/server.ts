@@ -9,6 +9,7 @@ import { expressMiddleware } from "@as-integrations/express4";
 import { getOgUrl } from "./url/url.service.js";
 import httpProxy from "http-proxy";
 import { createContext } from "./auth/auth-service.js";
+import { connectRedis } from "./utils/redis.js";
 const app = express();
 config();
 
@@ -18,19 +19,26 @@ const server = new ApolloServer({
 });
 
 const proxy = httpProxy.createProxyServer({
-  secure:true,
+  secure: true,
   changeOrigin: true,
 });
 
 try {
-  const connection = await appDataSource.initialize().then(async()=>{
-  await import('./utils/cronJob.js')});
+  const connection = await appDataSource.initialize().then(async () => {
+    await import("./utils/cronJob.js");
+  });
+  await connectRedis();
+  console.log("Redis is connected");
   console.log("db is connected");
 
   await server.start();
-  app.use("/graphql", express.json(), expressMiddleware(server,{
-    context:createContext
-  }));
+  app.use(
+    "/graphql",
+    express.json(),
+    expressMiddleware(server, {
+      context: createContext,
+    }),
+  );
 
   app.get("/:id", async (req, res) => {
     try {
@@ -41,17 +49,16 @@ try {
 
       const originalUrl = await getOgUrl(id);
       if (!originalUrl) {
-       return res.status(404).send("url is not present");
+        return res.status(404).send("url is not present");
       }
 
       const redirectUrl = originalUrl?.originalUrl;
 
-        if(!redirectUrl){
+      if (!redirectUrl) {
         return res.status(404).send("Redirect URL is not available");
       }
 
-    res.redirect(redirectUrl);
-     
+      res.redirect(redirectUrl);
     } catch (err) {
       console.log(err);
     }
@@ -60,7 +67,6 @@ try {
   app.listen({ port: 4000 }, () => {
     console.log(`Server ready at http://localhost:4000/graphql`);
   });
-
 } catch (error) {
   console.log("error", error);
 }
