@@ -8,6 +8,7 @@ import express from "express";
 import { expressMiddleware } from "@as-integrations/express4";
 import { getOgUrl } from "./url/url.service.js";
 import httpProxy from "http-proxy";
+import { createContext } from "./auth/auth-service.js";
 const app = express();
 config();
 
@@ -17,44 +18,39 @@ const server = new ApolloServer({
 });
 
 const proxy = httpProxy.createProxyServer({
-  target: "http://localhost:4000/graphql",
   secure:true,
   changeOrigin: true,
 });
 
 try {
   const connection = await appDataSource.initialize().then(async()=>{
-  import('./utils/cronJob.js')});
+  await import('./utils/cronJob.js')});
   console.log("db is connected");
 
   await server.start();
-  app.use("/graphql", express.json(), expressMiddleware(server));
+  app.use("/graphql", express.json(), expressMiddleware(server,{
+    context:createContext
+  }));
 
   app.get("/:id", async (req, res) => {
     try {
       const id = req.params.id;
       if (!id) {
-        res.status(400).send("id is required");
+        return res.status(400).send("id is required");
       }
 
       const originalUrl = await getOgUrl(id);
       if (!originalUrl) {
-        res.status(404).send("url is not present");
+       return res.status(404).send("url is not present");
       }
 
-    return  proxy.web(req,res,{
-          changeOrigin:true,
-          target: originalUrl.originalUrl,
-          ignorePath: true,
-          secure: true,
-      },
-      (err) => {
-        console.error("Proxy error:", err);
+      const redirectUrl = originalUrl?.originalUrl;
 
-        if (!res.headersSent) {
-          res.status(502).send("Unable to fetch the destination");
-        }
-      })
+        if(!redirectUrl){
+        return res.status(404).send("Redirect URL is not available");
+      }
+
+    res.redirect(redirectUrl);
      
     } catch (err) {
       console.log(err);
