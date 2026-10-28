@@ -5,4 +5,4 @@ export const urlSchema = `#graphql
        shortUrl:String
        aliase:String
     }
-`
+`;

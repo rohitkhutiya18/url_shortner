@@ -15,7 +15,10 @@ export const addUrl = async function (args: { url: string; aliase?: string }) {
 
   if (existingUrl) {
     if (args.aliase) {
-      Object.assign(existingUrl, { aliase: args.aliase , shortUrl: args.aliase });
+      Object.assign(existingUrl, {
+        aliase: args.aliase,
+        shortUrl: args.aliase,
+      });
       await urlRepository.save(existingUrl);
       return existingUrl;
     }
@@ -39,7 +42,8 @@ export const addUrl = async function (args: { url: string; aliase?: string }) {
 };
 
 export const getOgUrl = async function (key: string) {
-  const getData = await urlRepository.createQueryBuilder("url")
+  const getData = await urlRepository
+    .createQueryBuilder("url")
     .where("url.shortUrl = :key", { key })
     .getOne();
 
