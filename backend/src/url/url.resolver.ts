@@ -1,8 +1,11 @@
-import { addUrl } from "./url.service.js"
+import { addUrl, getAllUrl } from "./url.service.js"
 
 export const urlResolver = {
     Query:{
-      getAllUrl:()=>'hello'
+      getAllUrl:async ()=>{
+        const urlArr = await getAllUrl();
+        return urlArr;
+      }
     },
     Mutation:{
         createUrl:async (_:any,args:{url:string,aliase?:string})=>{
